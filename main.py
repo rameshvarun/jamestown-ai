@@ -51,7 +51,9 @@ if __name__ == "__main__":
             screen.fill((0, 0, 0))
 
             pygame.surfarray.blit_array(screen, np.swapaxes(frame, 0, 1))
-            #pygame.draw.circle(screen, (0, 255, 0), (entities['ship'][1], entities['ship'][0]), 2)
+
+            if entities['ship'] is not None:
+                pygame.draw.circle(screen, (0, 255, 0), (int(FRAME_SCALE*entities['ship'][1]), int(FRAME_SCALE*entities['ship'][0])), 2)
 
             for blue_bullet in entities['blue_bullets']:
                 pygame.draw.circle(screen, (255, 0, 0), (int(FRAME_SCALE*blue_bullet[1]), int(FRAME_SCALE*blue_bullet[0])), 2)

@@ -25,6 +25,7 @@ pink_bullet = imread('pink-bullet.png')
 pink_bullet_offset = np.asarray(pink_bullet.shape)[:2]/2
 
 red_beam = imread('red-beam.png')
+red_beam_offset = np.asarray(red_beam.shape)[:2]/2
 
 def find_blue_bullets(frame):
     result = np.squeeze(feature.match_template(frame, blue_bullet))
@@ -36,7 +37,12 @@ def find_pink_bullets(frame):
 
 def find_ship(frame):
     result = np.squeeze(feature.match_template(frame, red_beam))
-    return np.unravel_index(result.argmax(), result.shape)
+
+    val = result.max()
+    if val < 0.6:
+        return None
+
+    return np.unravel_index(result.argmax(), result.shape) + red_beam_offset
 
 def start(image_queue, out_queue, report_fps):
     logger.info("Starting object extraction process.")
