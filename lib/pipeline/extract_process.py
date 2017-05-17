@@ -21,7 +21,7 @@ red_beam = imread('red-beam.png')
 
 def find_blue_bullets(frame):
     result = np.squeeze(feature.match_template(frame, blue_bullet))
-    return feature.peak_local_max(result, threshold_abs=0.7)
+    return feature.peak_local_max(result, threshold_abs=0.7) + np.asarray(blue_bullet.shape)[:2]/2
 
 def find_pink_bullets(frame):
     result = np.squeeze(feature.match_template(frame, pink_bullet))
@@ -38,11 +38,14 @@ def start(image_queue, out_queue):
 
         start_time = time.time()
         blue_bullets = find_blue_bullets(frame)
-        pink_bullets = find_pink_bullets(frame)
-        ship = find_ship(frame)
+        #pink_bullets = find_pink_bullets(frame)
+        #ship = find_ship(frame)
         end_time = time.time()
 
         logger.info("Extraction took %d seconds...", end_time - start_time)
+
         out_queue.put((frame, frame_timestamp, {
-            'blue_bullets': blue_bullets, 'ship': ship, 'pink_bullet': pink_bullets
+            #'ship': ship,
+            'blue_bullets': blue_bullets,
+            #'pink_bullet': pink_bullets
         }))
