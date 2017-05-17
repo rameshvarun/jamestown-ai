@@ -13,7 +13,7 @@ def start(out_queue, report_fps):
 
     while True:
         start_time = time.time()
-        frame = capture.capture_as_array(downscale=2)
+        frame = capture.capture_as_array(downscale=4)
         end_time = time.time()
 
         fps.observe(1/(end_time - start_time))
