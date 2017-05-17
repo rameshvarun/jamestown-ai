@@ -4,7 +4,8 @@ It uses WinAPI functions (accessed through ctypes) to get the bounds of a Window
 and PIL's ImageGrab extension to get the data.
 """
 
-from PIL import ImageGrab
+from PIL import Image
+from mss import mss
 from ctypes import *
 import numpy as np
 
@@ -37,17 +38,16 @@ class WindowCapture:
                 "Window with title \"{}\" not found.".format(title))
         self.topleft = POINT()
         self.clientrect = RECT()
+        self.sct = mss()
 
     def capture(self):
         self.topleft.clear()
         user32.GetClientRect(self.hwnd, byref(self.clientrect))
         user32.ClientToScreen(self.hwnd, byref(self.topleft))
 
-        return ImageGrab.grab((self.topleft.x, self.topleft.y,
-                               self.topleft.x + self.clientrect.right,
-                               self.topleft.y + self.clientrect.bottom))
+        self.sct.get_pixels({'top': self.topleft.y, 'left': self.topleft.x, 'width': self.clientrect.right, 'height': self.clientrect.bottom})
+        return Image.frombytes('RGB', (self.sct.width, self.sct.height), self.sct.image)
 
-        return ImageGrab.grab()
 
     def capture_as_array(self, downscale=1):
         im = self.capture()
