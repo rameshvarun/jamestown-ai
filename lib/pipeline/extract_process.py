@@ -4,6 +4,8 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+import cv2
+
 import numpy as np
 from skimage import io, feature
 from scipy import misc
@@ -31,21 +33,19 @@ blue_beam = imread('patterns/blue-beam.png')
 blue_beam_offset = np.asarray(blue_beam.shape)[:2]/2
 
 def find_blue_bullets(frame):
-    result = np.squeeze(feature.match_template(frame, blue_bullet))
-    return feature.peak_local_max(result, threshold_abs=0.7) + blue_bullet_offset
+    result = cv2.matchTemplate(frame, blue_bullet, cv2.TM_SQDIFF)
+    return feature.peak_local_max(-result, threshold_abs=-500000) + blue_bullet_offset
 
 def find_pink_bullets(frame):
-    result = np.squeeze(feature.match_template(frame, pink_bullet))
-    return feature.peak_local_max(result, threshold_abs=0.7) + pink_bullet_offset
+    result = cv2.matchTemplate(frame, pink_bullet, cv2.TM_SQDIFF)
+    return feature.peak_local_max(-result, threshold_abs=-500000) + blue_bullet_offset
 
 def find_ship(frame):
-    result = np.squeeze(feature.match_template(frame, blue_beam))
-
-    val = result.max()
-    if val < 0.6:
+    result = cv2.matchTemplate(frame, blue_beam, cv2.TM_SQDIFF)
+    if result.min() > 8000000.0:
         return None
 
-    return np.unravel_index(result.argmax(), result.shape) + red_beam_offset
+    return np.unravel_index(result.argmin(), result.shape) + red_beam_offset
 
 def extract_elements(pool, frame):
     results = [
