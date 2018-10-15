@@ -1,0 +1,7 @@
+Click==7.0
+mss==2.0.22
+pygame==1.9.3
+numpy==1.14.2
+scipy==1.1.0
+scikit-image==0.13.0
+Pillow==4.1.1

@@ -4,11 +4,48 @@ import pygame
 from scipy import misc
 
 from lib.pipeline import capture_process, extract_process
-from multiprocessing import Process, Queue
+from multiprocessing import Process, Queue, Pool
 from queue import Empty
+from skimage import io
 
-if __name__ == "__main__":
+import click
 
+FRAME_SCALE = 4.0
+
+cli = click.Group()
+
+def draw_extract_debug(screen, frame, entities):
+    pygame.surfarray.blit_array(screen, np.swapaxes(frame, 0, 1))
+    if entities['ship'] is not None:
+        pygame.draw.circle(screen, (0, 255, 0), (int(FRAME_SCALE*entities['ship'][1]), int(FRAME_SCALE*entities['ship'][0])), 5)
+
+    for blue_bullet in entities['blue_bullets']:
+        pygame.draw.circle(screen, (255, 0, 0), (int(FRAME_SCALE*blue_bullet[1]), int(FRAME_SCALE*blue_bullet[0])), 4)
+    for pink_bullet in entities['pink_bullets']:
+        pygame.draw.circle(screen, (255, 0, 0), (int(FRAME_SCALE*pink_bullet[1]), int(FRAME_SCALE*pink_bullet[0])), 4)
+
+@cli.command()
+@click.argument('file', type=click.File('rb'))
+def frametest(file):
+    pool = Pool()
+    frame = extract_process.imread(file)
+    entities = extract_process.extract_elements(pool, frame)
+
+    frame = misc.imresize(frame, FRAME_SCALE, 'nearest')
+    screen = pygame.display.set_mode((frame.shape[1], frame.shape[0]), pygame.HWSURFACE | pygame.DOUBLEBUF)
+
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+        screen.fill((0, 0, 0))
+        draw_extract_debug(screen, frame, entities)
+        pygame.display.flip()
+
+@cli.command()
+def run():
     capture_fps_queue, extraction_fps_queue = Queue(), Queue()
 
     capture_queue = Queue(1)
@@ -18,8 +55,6 @@ if __name__ == "__main__":
     extraction_out = Queue(1)
     extract = Process(target=extract_process.start, args=(capture_queue, extraction_out, extraction_fps_queue))
     extract.start()
-
-    FRAME_SCALE = 4.0
 
     (frame, timestamp, entities) = extraction_out.get()
     frame = misc.imresize(frame, FRAME_SCALE, 'nearest')
@@ -49,16 +84,7 @@ if __name__ == "__main__":
                 pass
 
             screen.fill((0, 0, 0))
-
-            pygame.surfarray.blit_array(screen, np.swapaxes(frame, 0, 1))
-
-            if entities['ship'] is not None:
-                pygame.draw.circle(screen, (0, 255, 0), (int(FRAME_SCALE*entities['ship'][1]), int(FRAME_SCALE*entities['ship'][0])), 2)
-
-            for blue_bullet in entities['blue_bullets']:
-                pygame.draw.circle(screen, (255, 0, 0), (int(FRAME_SCALE*blue_bullet[1]), int(FRAME_SCALE*blue_bullet[0])), 2)
-            for pink_bullet in entities['pink_bullets']:
-                pygame.draw.circle(screen, (255, 0, 0), (int(FRAME_SCALE*pink_bullet[1]), int(FRAME_SCALE*pink_bullet[0])), 2)
+            draw_extract_debug(screen, frame, entities)
 
             capture_fps_text = font.render("Capture FPS: {:.2f}".format(capture_fps), True, (255, 255, 255))
             screen.blit(capture_fps_text, (0, 0))
@@ -70,3 +96,6 @@ if __name__ == "__main__":
     finally:
         capture.terminate()
         extract.terminate()
+
+if __name__ == "__main__":
+    cli()
