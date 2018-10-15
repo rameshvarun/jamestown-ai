@@ -27,6 +27,9 @@ pink_bullet_offset = np.asarray(pink_bullet.shape)[:2]/2
 red_beam = imread('patterns/red-beam.png')
 red_beam_offset = np.asarray(red_beam.shape)[:2]/2
 
+blue_beam = imread('patterns/blue-beam.png')
+blue_beam_offset = np.asarray(blue_beam.shape)[:2]/2
+
 def find_blue_bullets(frame):
     result = np.squeeze(feature.match_template(frame, blue_bullet))
     return feature.peak_local_max(result, threshold_abs=0.7) + blue_bullet_offset
@@ -36,7 +39,7 @@ def find_pink_bullets(frame):
     return feature.peak_local_max(result, threshold_abs=0.7) + pink_bullet_offset
 
 def find_ship(frame):
-    result = np.squeeze(feature.match_template(frame, red_beam))
+    result = np.squeeze(feature.match_template(frame, blue_beam))
 
     val = result.max()
     if val < 0.6:
