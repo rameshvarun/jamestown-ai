@@ -45,7 +45,8 @@ def frametest(file):
         pygame.display.flip()
 
 @cli.command()
-def run():
+@click.option('--save-screenshots', is_flag=True)
+def run(save_screenshots):
     capture_fps_queue, extraction_fps_queue = Queue(), Queue()
 
     capture_queue = Queue(1)
@@ -64,6 +65,8 @@ def run():
 
     pygame.font.init()
     font = pygame.font.Font(pygame.font.get_default_font(), 20)
+
+    frameno = 0
 
     try:
         running = True
@@ -93,6 +96,11 @@ def run():
             screen.blit(extract_fps_text, (0, 25))
 
             pygame.display.flip()
+
+            if save_screenshots:
+                pygame.image.save(screen, "out/%d.png" % frameno)
+
+            frameno += 1
     finally:
         capture.terminate()
         extract.terminate()
